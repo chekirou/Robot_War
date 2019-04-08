@@ -103,7 +103,7 @@ agents = []
 
 arena = 1
 
-nbAgents = 8 # doit être pair et inférieur a 32
+nbAgents = 16 # doit être pair et inférieur a 32
 maxSensorDistance = 30              # utilisé localement.
 maxRotationSpeed = 5
 maxTranslationSpeed = 1
@@ -197,13 +197,12 @@ class AgentTypeA(object):
             #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
             obstacles = [1 if self.getObjectTypeAtSensor(i) >0 else 0 for i in range(len(SensorBelt))]
             if sum(obstacles) >0:
-                #find with the ones
                 
                 rotation += ((((self.getObjectTypeAtSensor(0)+2)%4) %3)-1) * SensorBelt[0] 
                 rotation += ((((self.getObjectTypeAtSensor(1)+2)%4) %3)-1) * SensorBelt[1] 
                 rotation += ((((self.getObjectTypeAtSensor(2)+2)%4) %3)-1) * SensorBelt[2] 
                 rotation += ((((self.getObjectTypeAtSensor(3)+2)%4) %3)-1) * SensorBelt[3] 
-                #rotation += ((((self.getObjectTypeAtSensor(4)+2)%4) %3)-1) * SensorBelt[4] 
+                rotation = ((((self.getObjectTypeAtSensor(4)+2)%4) %3)-1) * SensorBelt[4] 
                 rotation += ((((self.getObjectTypeAtSensor(5)+2)%4) %3)-1) * SensorBelt[5] 
                 rotation += ((((self.getObjectTypeAtSensor(6)+2)%4) %3)-1) * SensorBelt[6] 
                 rotation += ((((self.getObjectTypeAtSensor(7)+2)%4) %3)-1) * SensorBelt[7]
@@ -226,7 +225,7 @@ class AgentTypeA(object):
                         rotation += SensorBelt[k]
 
 
-        self.setRotationValue( rotation )
+        self.setRotationValue( float(rotation)/180 )
         self.setTranslationValue(1 ) # normalisé -1,+1
         
 		# monitoring (optionnel - changer la valeur de verbose)
