@@ -103,6 +103,7 @@ class Agent(object):
     rotationValue = 0 # ne pas modifier directement
 
     params = []
+    nbhidden = 20
     fitness = 0
     previousPos = (0,0)
     
@@ -112,6 +113,7 @@ class Agent(object):
         #print "robot #", self.id, " -- init"
         self.robot = robot
 
+
     def getRobot(self):
         return self.robot
 
@@ -119,12 +121,12 @@ class Agent(object):
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-    def evaluate(self,_params):
+    def evaluate(self,_params, nbhidden):
         
         self.resetPosition()
         self.resetFitness()
         self.params = list(_params)
-
+        self.nbhidden = nbhidden
         for i in range(maxIterations):
             updateSensors()
             self.step()
@@ -183,11 +185,24 @@ class Agent(object):
             exit()
 
         # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
-        translation =  math.tanh( sensorMinus40 * self.params[0] + sensorMinus20 * self.params[1] + sensorPlus20 * self.params[2] + sensorPlus40 * self.params[3] + self.params[4]) 
-        rotation =  math.tanh( sensorMinus40 * self.params[5] + sensorMinus20 * self.params[6] + sensorPlus20 * self.params[7] + sensorPlus40 * self.params[8] + self.params[9])
+        ##translation =  math.tanh( sensorMinus40 * self.params[0] + sensorMinus20 * self.params[1] + sensorPlus20 * self.params[2] + sensorPlus40 * self.params[3] + self.params[4]) 
+        ##rotation =  math.tanh( sensorMinus40 * self.params[5] + sensorMinus20 * self.params[6] + sensorPlus20 * self.params[7] + sensorPlus40 * self.params[8] + self.params[9])
 
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
-
+        inputs_list = np.array([self.getDistanceAtSensor(i) for i in range(1,7)])
+        inputs = numpy.array(inputs_list, ndmin=2).T
+        
+        # calculate signals into hidden layer
+        m = np.array(self.params[0:self.nbhidden * inputs_list.size ]).reshape(inputs_list.size, self.nbhidden)
+        hidden_inputs = numpy.dot(m, inputs)
+        # calculate the signals emerging from hidden layer
+        
+        hidden_outputs = scipy.special.expit(hidden_inputs)
+         m = np.array(self.params[self.nbhidden * inputs_list.size:]).reshape(self.nbhidden, 2)
+        # calculate signals into final output layer
+        final_inputs = numpy.dot(m, hidden_outputs)
+        # calculate the signals emerging from final output layer
+        final_outputs = self.activation_function(final_inputs)
         self.setRotationValue( rotation )
         self.setTranslationValue( translation )
 
