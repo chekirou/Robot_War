@@ -57,7 +57,7 @@ game = Game()
 agents = []
 screen_width=512 #512,768,... -- multiples de 32  
 screen_height=512 #512,768,... -- multiples de 32
-nbAgents = 1
+nbAgents = 5
 
 maxSensorDistance = 30              # utilisé localement.
 maxRotationSpeed = 5
@@ -102,7 +102,7 @@ class Agent(object):
 
     def stepController(self):
 		
-        params = [0, 1, 1, 0, 0, -1, -1, 0, 1, 1]
+        params = [-0.7764808484716894, -0.3380026149024635, -0.9999934287931815, 0.7023767298065757, -0.9253248888172048, 0.36661343429558646, -0.28890344285079395, -0.21503874106360432, -0.05939699922831787, 0.9878743258411993]
         #print "robot #", self.id, " -- step"
 
         p = self.robot
@@ -234,16 +234,16 @@ def setupAgents():
 
 
 def setupArena():
-    for i in range(6,13):
-        addObstacle(row=3,col=i)
-    for i in range(0,12):
-        addObstacle(row=14,col=i)
-    #addObstacle(row=4,col=3)
-    #addObstacle(row=5,col=12)
-    #addObstacle(row=8,col=12)
-    #addObstacle(row=11,col=3)
-    #addObstacle(row=10,col=3)
-    #addObstacle(row=9,col=3)
+    addObstacle(row=4,col=3)
+    addObstacle(row=5,col=12)
+    addObstacle(row=8,col=12)
+    addObstacle(row=11,col=3)
+    addObstacle(row=10,col=3)
+    addObstacle(row=9,col=3)
+    addObstacle(row=12,col=5)
+    addObstacle(row=10,col=8)
+    addObstacle(row=6,col=9)
+    addObstacle(row=1,col=2) 
 
 def updateSensors():
     global sensors

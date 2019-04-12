@@ -90,6 +90,7 @@ from random import random, shuffle, randint
 import time
 import sys
 import atexit
+import math
 
 
 '''''''''''''''''''''''''''''
@@ -182,6 +183,7 @@ class AgentTypeA(object):
         circle( *self.getRobot().get_centroid() , r = 22) # je dessine un rond bleu autour de ce robot
 
         rotation =0
+        translation = 0
         strategie = 2
         #print "robot #", self.id, " -- step"
         if self.id % 4 != 0 :
@@ -198,15 +200,33 @@ class AgentTypeA(object):
             obstacles = [1 if self.getObjectTypeAtSensor(i) >0 else 0 for i in range(len(SensorBelt))]
             if sum(obstacles) >0:
                 #find with the ones
+                params = [-0.7764808484716894, -0.3380026149024635, -0.9999934287931815, 0.7023767298065757, -0.9253248888172048, 0.36661343429558646, -0.28890344285079395, -0.21503874106360432, -0.05939699922831787, 0.9878743258411993]
+        #print "robot #", self.id, " -- step"
+
+                p = self.robot
+
+                # actions
+                # valeur de paramètre entre -1 et +1.
+                # cette valeur sera converti ensuite entre:
+                #  - pour setTranslation: entre -maxTranslationSpeed et +maxTranslationSpeed
+                #  - pour setRotation: entre -maxRotationSpeed et +maxRotationSpeed
+                # Attention:
+                #   ces fonctions *programment* la commande motrice, mais *ne l'exécute pas*
+                #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
                 
-                rotation += ((((self.getObjectTypeAtSensor(0)+2)%4) %3)-1) * SensorBelt[0] 
-                rotation += ((((self.getObjectTypeAtSensor(1)+2)%4) %3)-1) * SensorBelt[1] 
-                rotation += ((((self.getObjectTypeAtSensor(2)+2)%4) %3)-1) * SensorBelt[2] 
-                rotation += ((((self.getObjectTypeAtSensor(3)+2)%4) %3)-1) * SensorBelt[3] 
-                #rotation += ((((self.getObjectTypeAtSensor(4)+2)%4) %3)-1) * SensorBelt[4] 
-                rotation += ((((self.getObjectTypeAtSensor(5)+2)%4) %3)-1) * SensorBelt[5] 
-                rotation += ((((self.getObjectTypeAtSensor(6)+2)%4) %3)-1) * SensorBelt[6] 
-                rotation += ((((self.getObjectTypeAtSensor(7)+2)%4) %3)-1) * SensorBelt[7]
+                rotation = 0
+
+                sensorMinus80 = self.getDistanceAtSensor(1)
+                sensorMinus40 = self.getDistanceAtSensor(2)
+                sensorMinus20 = self.getDistanceAtSensor(3)
+                sensorPlus20 = self.getDistanceAtSensor(4)
+                sensorPlus40 = self.getDistanceAtSensor(5)
+                sensorPlus80 = self.getDistanceAtSensor(6)
+
+                # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
+                translation +=  math.tanh( sensorMinus40 * params[0] + sensorMinus20 * params[1] + sensorPlus20 * params[2] + sensorPlus40 * params[3] + params[4]) 
+                rotation +=  math.tanh( sensorMinus40 * params[5] + sensorMinus20 * params[6] + sensorPlus20 * params[7] + sensorPlus40 * params[8] +params[9])
+                
                 
         else:
             for i in range(len(SensorBelt)):
@@ -218,12 +238,14 @@ class AgentTypeA(object):
                     rotation += ((self.getObjectTypeAtSensor(4) %2) *-1) * SensorBelt[4] 
                     rotation += ((self.getObjectTypeAtSensor(5) %2) *-1) * SensorBelt[5] 
                     rotation += ((self.getObjectTypeAtSensor(6) %2) *-1) * SensorBelt[6] 
-                    rotation += ((self.getObjectTypeAtSensor(7) %2) *-1) * SensorBelt[7] 
+                    rotation += ((self.getObjectTypeAtSensor(7) %2) *-1) * SensorBelt[7]
+                    translation =1 
                     break;
                 for k in range(len(SensorBelt)):
                     if self.getObjectTypeAtSensor(k) == 2 and self.getRobotInfoAtSensor(k)["teamname"] != self.teamname:
                         print()
                         rotation += SensorBelt[k]
+                translation = 1
 
 
         self.setRotationValue( rotation )
@@ -345,18 +367,96 @@ class AgentTypeB(object):
         distGauche = self.getDistanceAtSensor(2) # renvoi une valeur normalisée entre 0 et 1
         distDroite = self.getDistanceAtSensor(5) # renvoi une valeur normalisée entre 0 et 1
         
-        if distGauche < distDroite:
+        
+        rotation =0
+        translation = 0
+        strategie = 2
+        #print "robot #", self.id, " -- step"
+        if self.id % 4 != 0 :
+            p = self.robot
+
+            # actions
+            # valeur de paramètre entre -1 et +1.
+            # cette valeur sera converti ensuite entre:
+            #  - pour setTranslation: entre -maxTranslationSpeed et +maxTranslationSpeed
+            #  - pour setRotation: entre -maxRotationSpeed et +maxRotationSpeed
+            # Attention:
+            #   ces fonctions *programment* la commande motrice, mais *ne l'exécute pas*
+            #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
+            obstacles = [1 if self.getObjectTypeAtSensor(i) >0 else 0 for i in range(len(SensorBelt))]
+            if sum(obstacles) >0:
+                #find with the ones
+                params = [0.15678520379476524, 0.8998590432590972, -0.3897409200899171, 0.5176809996438896, 0.1342351084791682, -0.9059639670865729, -0.16938959989329327, 0.9778612993051061, 0.4240828140022628, -0.3013263344068853]
+        #print "robot #", self.id, " -- step"
+
+                p = self.robot
+
+                # actions
+                # valeur de paramètre entre -1 et +1.
+                # cette valeur sera converti ensuite entre:
+                #  - pour setTranslation: entre -maxTranslationSpeed et +maxTranslationSpeed
+                #  - pour setRotation: entre -maxRotationSpeed et +maxRotationSpeed
+                # Attention:
+                #   ces fonctions *programment* la commande motrice, mais *ne l'exécute pas*
+                #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
+                
+                rotation = 0
+
+                sensorMinus80 = self.getDistanceAtSensor(1)
+                sensorMinus40 = self.getDistanceAtSensor(2)
+                sensorMinus20 = self.getDistanceAtSensor(3)
+                sensorPlus20 = self.getDistanceAtSensor(4)
+                sensorPlus40 = self.getDistanceAtSensor(5)
+                sensorPlus80 = self.getDistanceAtSensor(6)
+
+                # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
+                translation +=  math.tanh( sensorMinus40 * params[0] + sensorMinus20 * params[1] + sensorPlus20 * params[2] + sensorPlus40 * params[3] + params[4]) 
+                rotation +=  math.tanh( sensorMinus40 * params[5] + sensorMinus20 * params[6] + sensorPlus20 * params[7] + sensorPlus40 * params[8] +params[9])
+                
+                
+        else:
+            for i in range(len(SensorBelt)):
+                if  self.getObjectTypeAtSensor(i) == 1:
+                    rotation += ((self.getObjectTypeAtSensor(0) %2) *-1) * SensorBelt[0] 
+                    rotation += ((self.getObjectTypeAtSensor(1) %2) *-1) * SensorBelt[1] 
+                    rotation += ((self.getObjectTypeAtSensor(2) %2) *-1) * SensorBelt[2] 
+                    rotation += ((self.getObjectTypeAtSensor(3) %2) *-1) * SensorBelt[3]
+                    rotation += ((self.getObjectTypeAtSensor(4) %2) *-1) * SensorBelt[4] 
+                    rotation += ((self.getObjectTypeAtSensor(5) %2) *-1) * SensorBelt[5] 
+                    rotation += ((self.getObjectTypeAtSensor(6) %2) *-1) * SensorBelt[6] 
+                    rotation += ((self.getObjectTypeAtSensor(7) %2) *-1) * SensorBelt[7]
+                    translation =1 
+                    break;
+                for k in range(len(SensorBelt)):
+                    if self.getObjectTypeAtSensor(k) == 2 and self.getRobotInfoAtSensor(k)["teamname"] != self.teamname:
+                        print()
+                        rotation += SensorBelt[k]
+                translation = 1
+
+
+        self.setRotationValue( rotation )
+        self.setTranslationValue(1 ) # normalisé -1,+1
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        '''if distGauche < distDroite:
             self.setRotationValue( +1 )
         elif distGauche > distDroite:
             self.setRotationValue( -1 )
         else:
             self.setRotationValue( 0 )
 
-        self.setTranslationValue(1) # normalisé -1,+1
+        self.setTranslationValue(1) # normalisé -1,+1'''
         
         
        
-        self.setTranslationValue(1.0) # normalisé -1,+1
+        #self.setTranslationValue(1.0) # normalisé -1,+1
 		# monitoring (optionnel - changer la valeur de verbose)
         if verbose == True:
 	        print ("Robot #"+str(self.id)+" [teamname:\""+str(self.teamname)+"\"] [variable mémoire = "+str(self.etat)+"] :")
