@@ -129,8 +129,8 @@ class Agent(object):
             updateSensors()
             self.step()
             #self.updateFitness1() # pour maximiser la distance au centre de l'arène
-            #self.updateFitness2() # pour maximiser la distance parcourue a chaque pas de temps
-            self.updateFitness3() # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
+            self.updateFitness2() # pour maximiser la distance parcourue a chaque pas de temps
+            #self.updateFitness3() # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
             game.mainiteration()
 
         return self.fitness
@@ -178,18 +178,18 @@ class Agent(object):
         sensorPlus40 = self.getDistanceAtSensor(5)
         sensorPlus80 = self.getDistanceAtSensor(6)
 
-        if len(self.params) != 10: # vérifie que le nombre de paramètres donné est correct
+        if len(self.params) != 7: # vérifie que le nombre de paramètres donné est correct
             print ("[ERROR] number of parameters is incorrect. Exiting.")
             exit()
 
         # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
-        translation =  math.tanh( sensorMinus40 * self.params[0] + sensorMinus20 * self.params[1] + sensorPlus20 * self.params[2] + sensorPlus40 * self.params[3] + self.params[4]) 
-        rotation =  math.tanh( sensorMinus40 * self.params[5] + sensorMinus20 * self.params[6] + sensorPlus20 * self.params[7] + sensorPlus40 * self.params[8] + self.params[9])
+        rotation =  math.tanh( sensorMinus40 * self.params[0] + sensorMinus20 * self.params[1] + sensorPlus20 * self.params[2] + sensorPlus40 * self.params[3] + self.params[4]  * sensorMinus80+ self.params[5]  + self.params[6]  * sensorPlus80) 
+        #rotation =  math.tanh( sensorMinus40 * self.params[7] + sensorMinus20 * self.params[7] + sensorPlus20 * self.params[9] + sensorPlus40 * self.params[10] + self.params[11] +self.params[12]  * sensorMinus80 + self.params[13]  * sensorPlus80)
 
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
 
         self.setRotationValue( rotation )
-        self.setTranslationValue( translation )
+        self.setTranslationValue( 1 )
 
         return
 
@@ -274,21 +274,17 @@ def setupAgents():
 
 
 def setupArena():
-    for i in range(6,13):
-        addObstacle(row=3,col=i)
-    for i in range(3,10):
-        addObstacle(row=12,col=i)
+    for j in range(0,16):
+        for i in range(0, 16):
+            if j%5 == 0 and i%3 == 0:
+                addObstacle(row=i,col=j)
+    for j in range(0, 10):
+        addObstacle(row=5, col=j)
     
-    addObstacle(row=4,col=3)
-    addObstacle(row=5,col=12)
-    addObstacle(row=8,col=12)
-    addObstacle(row=11,col=3)
-    addObstacle(row=10,col=3)
-    addObstacle(row=9,col=3)
-    addObstacle(row=12,col=5)
-    addObstacle(row=10,col=8)
-    addObstacle(row=6,col=9)
-    addObstacle(row=1,col=2) 
+    for j in range(10, 15):
+        addObstacle(row=j, col=12)
+    
+
 
 def updateSensors():
     global sensors 
@@ -299,7 +295,7 @@ def mute(individu,pMute):
     nouvelIndividu = []
     for e in individu:
         if random() < pMute:
-            nouvelIndividu.append (uniform(-1, 1))
+            nouvelIndividu.append ( max(min(e  + uniform(-0.2, 0.2) , 1), -1 ))
         else:
             nouvelIndividu.append( e )
     return nouvelIndividu
@@ -379,11 +375,11 @@ for iteration in range(nbruns):
     bestFitness = 0 # init with worst value
     bestParams = []
     bestEvalIt = 0
-    taillePop = 100
+    taillePop = 10
     maxEvaluations = 500 # budget en terme de nombre de robots évalués au total
-    maxIterations = 1000 # temps passé pour évaluer _un_ robot
+    maxIterations = 200 # temps passé pour évaluer _un_ robot
     nbReevaluations = 4
-    genomeSize = 10
+    genomeSize = 7
     K = 8
     Pmutation = float(1) / genomeSize
     population = []

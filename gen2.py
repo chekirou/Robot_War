@@ -33,6 +33,8 @@ import sys
 import atexit
 from itertools import count
 import math
+import numpy as np
+import scipy.special as sp
 
 
 '''''''''''''''''''''''''''''
@@ -102,21 +104,12 @@ class Agent(object):
 
     def stepController(self):
 		
-        params = [0.027182340913163544, -0.8743480710328165, -0.15286940306441482, 0.7387603485308386, 0.2326124962453949, -1, -0.8148863046123946]
+        params = [0, 1, 1, 1, 1, -0.18119810467087671, 0, 1, 1, 0.8141703138943657, -1, 0.902349482457901, -1, 1, 1, 0.11312830543725605, -1, 0.9896338430795174, 1, -1, 0, -1, 1, -1, -1, 1, 1, -1, 0, 0, -1, -0.026734838362200003, 1, 1, -1, 0, 1, 0, 1, -1, 0, 0, -1, -1, -1, -1, 1, -1, -1, 0, 1, 1, -0.8790231813317837, 1, 0, -1, 1, -1, 1, 0, -1, 0, 0, 0, 0, 0, -1, -1, 0, 1, 1, 1, 0.19785814842551097, -1, 1, -1, -1, 0, 1, 1, -1, 0, 0, -1, -1, 1, 1, 1, -1, 1, 1, 0, 0.11230066980987213, 1, 1, -1, 0, 1, 0, 1, 0.8920718889502143, -1, 0, 0.8232783146561736, -1, 1, -1, -1, 1, 0, -1, -0.8525001892824183, 0, 0, 1, 1, -0.9032353031174674, 1, 1, -1, -1, -1, -1, 0, 0, 0, 1, 1, -1, 1, 0, -1, 0, 1, 1, 0.8118896193559196, 0, 0, 1, 1, 0, -1, -1, 0, -1, -1, 1, 0, 1, 0, 0, 1, -1, 1, 0, 0, 0, 0, 0.09974391079058242, 0, 0, 0, 0, 1, -1, 1, 1, -1, 0, -1, 1, 1, 1, -0.06636307636984104, 0, 0, -1, 0, -1, -1, 0, 0, 0, 0, 1, -0.043022793929845926, 1, -1, 0, 1, 1, 0, -0.053594039582556346, 0, 1, 1, -1, -1, -1, 0, 1, -1, 0, 1, -1, 1, -1, 1, 0, 1, 1, -1, 1, 1, 0, -1, -1, -1, 0, 1]
         #print "robot #", self.id, " -- step"
 
-        p = self.robot
-
-        # actions
-        # valeur de paramètre entre -1 et +1.
-        # cette valeur sera converti ensuite entre:
-        #  - pour setTranslation: entre -maxTranslationSpeed et +maxTranslationSpeed
-        #  - pour setRotation: entre -maxRotationSpeed et +maxRotationSpeed
-        # Attention:
-        #   ces fonctions *programment* la commande motrice, mais *ne l'exécute pas*
-        #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
         translation = 0
         rotation = 0
+        nbhidden = 20
         
         sensorMinus80 = self.getDistanceAtSensor(1)
         sensorMinus40 = self.getDistanceAtSensor(2)
@@ -125,14 +118,35 @@ class Agent(object):
         sensorPlus40 = self.getDistanceAtSensor(5)
         sensorPlus80 = self.getDistanceAtSensor(6)
 
+        if len(params) != 220: # vérifie que le nombre de paramètres donné est correct
+            print ("[ERROR] number of parameters is incorrect. Exiting.")
+            exit()
+
         # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
-        rotation =  math.tanh( sensorMinus40 * params[0] + sensorMinus20 * params[1] + sensorPlus20 * params[2] + sensorPlus40 * params[3] + params[4]  * sensorMinus80+ params[5]  + params[6]  * sensorPlus80) 
-        #rotation =  math.tanh( sensorMinus40 * params[5] + sensorMinus20 * params[6] + sensorPlus20 * params[7] + sensorPlus40 * params[8] +params[9])
+        ##translation =  math.tanh( sensorMinus40 * self.params[0] + sensorMinus20 * self.params[1] + sensorPlus20 * self.params[2] + sensorPlus40 * self.params[3] + self.params[4]) 
+        ##rotation =  math.tanh( sensorMinus40 * self.params[5] + sensorMinus20 * self.params[6] + sensorPlus20 * self.params[7] + sensorPlus40 * self.params[8] + self.params[9])
 
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
+        inputs_list = np.array([self.getDistanceAtSensor(i) for i in range(0,8)] + [1])
+        inputs = np.array(inputs_list, ndmin=2)
+        #print(inputs)
+        # calculate signals into hidden layer
+        m = np.array(params[0:nbhidden * inputs_list.size ]).reshape(inputs_list.size, nbhidden)
+        #print(m)
 
-        self.setRotationValue( rotation )
-        self.setTranslationValue( 1 )
+        hidden_inputs = np.dot( inputs,m)
+        # calculate the signals emerging from hidden layer
+        
+        hidden_outputs = sp.expit(hidden_inputs)
+        m = np.array(params[nbhidden * inputs_list.size:]).reshape(nbhidden, 2)
+        # calculate signals into final output layer
+        final_inputs = np.dot( hidden_outputs,m)
+        # calculate the signals emerging from final output layer
+        final_outputs = sp.expit(final_inputs)
+        #print(final_outputs)
+        self.setRotationValue( final_outputs[0][0])
+
+        self.setTranslationValue( final_outputs[0][1] )
         # monitoring - affiche diverses informations sur l'agent et ce qu'il voit.
         # pour ne pas surcharger l'affichage, je ne fais ca que pour le player 1
         if verbose == True and self.id == 0:

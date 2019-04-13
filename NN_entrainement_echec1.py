@@ -104,7 +104,7 @@ class Agent(object):
     rotationValue = 0 # ne pas modifier directement
 
     params = []
-    nbhidden = 10
+    nbhidden = 20
     fitness = 0
     previousPos = (0,0)
     
@@ -181,7 +181,7 @@ class Agent(object):
         sensorPlus40 = self.getDistanceAtSensor(5)
         sensorPlus80 = self.getDistanceAtSensor(6)
 
-        if len(self.params) != 100: # vérifie que le nombre de paramètres donné est correct
+        if len(self.params) != 220: # vérifie que le nombre de paramètres donné est correct
             print ("[ERROR] number of parameters is incorrect. Exiting.")
             exit()
 
@@ -190,7 +190,7 @@ class Agent(object):
         ##rotation =  math.tanh( sensorMinus40 * self.params[5] + sensorMinus20 * self.params[6] + sensorPlus20 * self.params[7] + sensorPlus40 * self.params[8] + self.params[9])
 
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
-        inputs_list = np.array([self.getDistanceAtSensor(i) for i in range(1,7)])
+        inputs_list = np.array([self.getDistanceAtSensor(i) for i in range(0,8)] + [1])
         inputs = np.array(inputs_list, ndmin=2)
         #print(inputs)
         # calculate signals into hidden layer
@@ -298,10 +298,7 @@ def setupArena():
         addObstacle(row=3,col=i)
     for i in range(3,10):
         addObstacle(row=12,col=i)
-    for i in range(3,10):
-        addObstacle(row=6,col=i)
-    for i in range(6,13):
-        addObstacle(row=i,col=5)
+    
     addObstacle(row=4,col=12)
     addObstacle(row=5,col=12)
     addObstacle(row=6,col=12)
@@ -319,13 +316,8 @@ def mute(individu,pMute):
     nouvelIndividu = []
     for e in individu:
         if random() < pMute:
-            a = e +  choice([1, -1]) * uniform(0, 0.02)
-            if (  a) > 1 :
-                nouvelIndividu.append (  e - uniform(0, 0.02))
-            elif a<-1 :
-                nouvelIndividu.append (  e + uniform(0, 0.02))
-            else:
-                nouvelIndividu.append (a)
+            
+            nouvelIndividu.append ( max(min(e  + uniform(-0.2, 0.2) , 1), -1 ))
 
             
         else:
@@ -411,14 +403,14 @@ for iteration in range(nbruns):
     maxEvaluations = 500 # budget en terme de nombre de robots évalués au total
     maxIterations = 400 # temps passé pour évaluer _un_ robot
     nbReevaluations = 4
-    genomeSize = 100
+    genomeSize = 220
     K = 10
     Pmutation = float(1) / genomeSize
     population = []
     for i in range(taillePop):
         individu = []
         for j in range(genomeSize):
-            individu.append(uniform(-0.5, 0.5))
+            individu.append(randint(-1,1))
         population.append([individu, 0])
     
     
@@ -435,7 +427,7 @@ for iteration in range(nbruns):
         
         for individu in population:
             print(individu[0])
-            individu[1] = agents[0].evaluate(individu[0], 10)
+            individu[1] = agents[0].evaluate(individu[0], 20)
             
        
         for individu in population:
@@ -506,7 +498,7 @@ for iteration in range(nbruns):
         i = i + 1
 
         # evalue les parametres
-        fitness = agents[0].evaluate(meilleurIndividu[0], 10)
+        fitness = agents[0].evaluate(meilleurIndividu[0], 20)
 
         print ("\t\tFitness:", fitness, "(original recorded fitness:", bestFitness,", measured at evaluation",bestEvalIt,")")
         print ("\t\tGenome:", bestParams)
