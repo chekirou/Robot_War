@@ -134,11 +134,11 @@ class Agent(object):
             #self.updateFitness1() # pour maximiser la distance au centre de l'arène
             #self.updateFitness2() # pour maximiser la distance parcourue a chaque pas de temps
             
-            self.updateFitness3()
+            self.updateFitness4()
             # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
             game.mainiteration()
 
-        return self.fitness, sum(list(cases.values())) * ( 1 - abs(self.rotationValue/maxRotationSpeed) )
+        return self.fitness, sum(list(cases.values())) 
 
     def resetPosition(self):
         p = self.robot
@@ -166,7 +166,14 @@ class Agent(object):
         currentPos = self.robot.get_centroid()
         self.fitness += ( 1 - abs(self.rotationValue/maxRotationSpeed) ) * math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2)) + math.sqrt(abs(currentPos[1]**2-self.previousPos[1]**2)) # a chaque pas de temps, ajoute la distance parcourue depuis t-1, avec une pénalité si rotation
         self.previousPos = currentPos
-
+    
+    
+    def updateFitness4(self):
+        currentPos = self.robot.get_centroid()
+        self.fitness +=  (self.translationValue) * ( 1 - abs(self.rotationValue/maxRotationSpeed) ) * (math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2)) + math.sqrt(abs(currentPos[1]**2-self.previousPos[1]**2))) # a chaque pas de temps, ajoute la distance parcourue depuis t-1, avec une pénalité si rotation
+        self.previousPos = currentPos
+    
+    
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -277,11 +284,17 @@ def setupAgents():
 
 
 def setupArena():
-    begin = 1
-    for j in range(0,16):
-        for i in range(0, 16):
-            if j%(i%5+ 4 ) == 0 and i%(j%4+3) == 0:
-                addObstacle(row=i,col=j)
+    
+    for i in range(6,13):
+        addObstacle(row=3,col=i)
+    for i in range(3,10):
+        addObstacle(row=12,col=i)
+    addObstacle(row=4,col=12)
+    addObstacle(row=5,col=12)
+    addObstacle(row=6,col=12)
+    addObstacle(row=11,col=3)
+    addObstacle(row=10,col=3)
+    addObstacle(row=9,col=3)
 
     
     
@@ -411,7 +424,7 @@ for iteration in range(nbruns):
        
         for individu in population:
             #print individu[0],"- fitness: ",individu[1]
-            if individu[2] > meilleurnbCases:
+            if (individu[2]+ individu[1]) > (meilleurnbCases+ meilleureFitness):
                 #sigma *= 2
 
                 meilleureFitness = individu[1]
