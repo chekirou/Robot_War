@@ -57,7 +57,7 @@ game = Game()
 agents = []
 screen_width=512 #512,768,... -- multiples de 32  
 screen_height=512 #512,768,... -- multiples de 32
-nbAgents = 5
+nbAgents = 4
 
 maxSensorDistance = 30              # utilisé localement.
 maxRotationSpeed = 5
@@ -68,7 +68,7 @@ SensorBelt = [-170,-80,-40,-20,+20,40,80,+170]  # angles en degres des senseurs 
 maxIterations = -1 # infinite: -1
 
 showSensors = True
-frameskip = 0   # 0: no-skip. >1: skip n-1 frames
+frameskip = 5   # 0: no-skip. >1: skip n-1 frames
 verbose = True
 
 '''''''''''''''''''''''''''''
@@ -102,8 +102,8 @@ class Agent(object):
 
     def stepController(self):
 		
-        params = [0.027182340913163544, -0.8743480710328165, -0.15286940306441482, 0.7387603485308386, 0.2326124962453949, -1, -0.8148863046123946]
-        #print "robot #", self.id, " -- step"
+        params =[-0.2831556063782714, -1, 1, 1, 1.2653766716846324, -0.2822707155537898, -0.05792096619105136, -0.6434957545399851, 1.459652230925276, 0.830183303256477, 0.5458212417970234, -1.091927649223694, -2.875937950643769, 0.20325499421386928, -0.11628206153893406, 1, 0.7131421223753699, 0.8054636410385507]
+         #print "robot #", self.id, " -- step"
 
         p = self.robot
 
@@ -117,22 +117,22 @@ class Agent(object):
         #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
         translation = 0
         rotation = 0
-        
+        sensorMinus170 = self.getDistanceAtSensor(0)
         sensorMinus80 = self.getDistanceAtSensor(1)
         sensorMinus40 = self.getDistanceAtSensor(2)
         sensorMinus20 = self.getDistanceAtSensor(3)
         sensorPlus20 = self.getDistanceAtSensor(4)
         sensorPlus40 = self.getDistanceAtSensor(5)
         sensorPlus80 = self.getDistanceAtSensor(6)
+        sensorPlus170 = self.getDistanceAtSensor(7)
 
         # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
-        rotation =  math.tanh( sensorMinus40 * params[0] + sensorMinus20 * params[1] + sensorPlus20 * params[2] + sensorPlus40 * params[3] + params[4]  * sensorMinus80+ params[5]  + params[6]  * sensorPlus80) 
-        #rotation =  math.tanh( sensorMinus40 * params[5] + sensorMinus20 * params[6] + sensorPlus20 * params[7] + sensorPlus40 * params[8] +params[9])
-
+        translation =  math.tanh( sensorMinus170 * params[0] +sensorMinus80 * params[1] + sensorMinus40 * params[2] + sensorMinus20 * params[3] + sensorPlus20 * params[4] + sensorPlus40 * params[5]  + params[6]  * sensorPlus80 +  params[7]  * sensorPlus170 +params[8]) 
+        rotation =  math.tanh(  sensorMinus170 * params[9] +sensorMinus80 * params[10]+sensorMinus40 * params[11] + sensorMinus20 * params[12] + sensorPlus20 * params[13] + sensorPlus40 * params[14] +params[15]  * sensorPlus80 + params[16]  * sensorPlus170 + params[17] ) 
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
 
         self.setRotationValue( rotation )
-        self.setTranslationValue( 1 )
+        self.setTranslationValue( translation )
         # monitoring - affiche diverses informations sur l'agent et ce qu'il voit.
         # pour ne pas surcharger l'affichage, je ne fais ca que pour le player 1
         if verbose == True and self.id == 0:

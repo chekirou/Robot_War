@@ -1,0 +1,8 @@
+- chercher comment entrainer par renforcement 
+
+- changer la fitness
+
+- changer les cartes
+
+- faire l'architecture de subsomption
+

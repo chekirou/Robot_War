@@ -83,7 +83,7 @@ maxTranslationSpeed = 3
 SensorBelt = [-170,-80,-40,-20,+20,40,80,+170]  # angles en degres des senseurs
 
 showSensors = True
-frameskip = 200   # 0: no-skip. >1: skip n-1 frames
+frameskip = 300   # 0: no-skip. >1: skip n-1 frames
 verbose = True
 
 
@@ -104,7 +104,7 @@ class Agent(object):
     rotationValue = 0 # ne pas modifier directement
 
     params = []
-    nbhidden = 20
+    nbhidden = 15
     fitness = 0
     previousPos = (0,0)
     
@@ -133,7 +133,8 @@ class Agent(object):
             self.step()
             #self.updateFitness1() # pour maximiser la distance au centre de l'arène
             #self.updateFitness2() # pour maximiser la distance parcourue a chaque pas de temps
-            self.updateFitness3() # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
+            #self.updateFitness3() # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
+            self.updateFitness4()
             game.mainiteration()
 
         return self.fitness
@@ -164,7 +165,10 @@ class Agent(object):
         currentPos = self.robot.get_centroid()
         self.fitness += ( 1 - abs(self.rotationValue/maxRotationSpeed) ) * math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2)) + math.sqrt(abs(currentPos[1]**2-self.previousPos[1]**2)) # a chaque pas de temps, ajoute la distance parcourue depuis t-1, avec une pénalité si rotation
         self.previousPos = currentPos
-
+    def updateFitness4(self):
+        currentPos = self.robot.get_centroid()
+        self.fitness += ( 1 - 2* abs(self.rotationValue/maxRotationSpeed) ) * abs(currentPos[0]**2-self.previousPos[0]**2) + abs(currentPos[1]**2-self.previousPos[1]**2) # a chaque pas de temps, ajoute la distance parcourue depuis t-1, avec une pénalité si rotation
+        self.previousPos = currentPos
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -294,8 +298,10 @@ def setupAgents():
 
 
 def setupArena():
-    for i in range(6,13):
-        addObstacle(row=3,col=i)
+    for i in range(0,16):
+        for j in range(0,16):
+            if i%4 == 0 and j % 4 == 0:
+                addObstacle(row=i,col=j)
     for i in range(3,10):
         addObstacle(row=12,col=i)
     
@@ -317,7 +323,7 @@ def mute(individu,pMute):
     for e in individu:
         if random() < pMute:
             
-            nouvelIndividu.append ( max(min(e  + uniform(-0.2, 0.2) , 1), -1 ))
+            nouvelIndividu.append ( e  + uniform(-0.5, 0.5))
 
             
         else:
@@ -395,23 +401,24 @@ print ("Optimizing.")
 
 game.frameskip = 200 # affichage à vitesse (très) rapide -- Benchmark (2018/3/28): macbook pro 3.1Ghz 12" core i7 'early 2015': 1250 updates/sec 
 for iteration in range(nbruns):
-    fichier = open("exo3run"+ str(iteration) + ".csv", "w")
+    #fichier = open("exo3run"+ str(iteration) + ".csv", "w")
     bestFitness = 0 # init with worst value
     bestParams = []
     bestEvalIt = 0
     taillePop = 10
-    maxEvaluations = 500 # budget en terme de nombre de robots évalués au total
-    maxIterations = 400 # temps passé pour évaluer _un_ robot
+    maxEvaluations = 200 # budget en terme de nombre de robots évalués au total
+    maxIterations = 300 # temps passé pour évaluer _un_ robot
     nbReevaluations = 4
     genomeSize = 220
-    K = 10
-    Pmutation = float(1) / genomeSize
+    K = 8
+    Pmutation = float(1.5) / genomeSize
     population = []
     for i in range(taillePop):
         individu = []
-        for j in range(genomeSize):
-            individu.append(randint(-1,1))
-        population.append([individu, 0])
+        #for j in range(genomeSize):
+            #individu.append(np.random.normal(0, 1, genomeSize))
+        population.append([ np.random.normal(0, 2, genomeSize) , 0])
+        print(population[i])
     
     
     it= 0
@@ -426,13 +433,14 @@ for iteration in range(nbruns):
     while it + taillePop <= maxEvaluations:    
         
         for individu in population:
-            print(individu[0])
+            #print(individu[0])
             individu[1] = agents[0].evaluate(individu[0], 20)
             
        
         for individu in population:
             #print individu[0],"- fitness: ",individu[1]
             if individu[1] > meilleureFitness:
+                print("found best")
                 meilleureFitness = individu[1]
                 meilleurIndividu = individu[:]
                 
@@ -455,11 +463,11 @@ for iteration in range(nbruns):
             nouvellePopulation.append([nouvelIndividu,0])
         
         
-        
+        print(nbGen)
         population = nouvellePopulation[:]
         it = it + taillePop
         nbGen += 1
-        fichier.write(str(nbGen)+","+str(meilleureFitness)+"\n")
+        #fichier.write(str(nbGen)+","+str(meilleureFitness)+"\n")
         
         
         
@@ -503,7 +511,7 @@ for iteration in range(nbruns):
         print ("\t\tFitness:", fitness, "(original recorded fitness:", bestFitness,", measured at evaluation",bestEvalIt,")")
         print ("\t\tGenome:", bestParams)
         
-    fichier.close()
+    #fichier.close()
 
 
 

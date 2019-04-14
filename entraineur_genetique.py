@@ -124,16 +124,21 @@ class Agent(object):
         self.resetPosition()
         self.resetFitness()
         self.params = list(_params)
-
+        nbCases = 0
+        cases = {}
         for i in range(maxIterations):
             updateSensors()
             self.step()
+            coord = self.robot.get_centroid()
+            cases[str(int(coord[0])//16) + " " + str(int(coord[1])//16)] = 1
             #self.updateFitness1() # pour maximiser la distance au centre de l'arène
-            self.updateFitness2() # pour maximiser la distance parcourue a chaque pas de temps
-            #self.updateFitness3() # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
+            #self.updateFitness2() # pour maximiser la distance parcourue a chaque pas de temps
+            
+            self.updateFitness3()
+            # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
             game.mainiteration()
 
-        return self.fitness
+        return self.fitness, sum(list(cases.values())) * ( 1 - abs(self.rotationValue/maxRotationSpeed) )
 
     def resetPosition(self):
         p = self.robot
@@ -170,26 +175,24 @@ class Agent(object):
 
         translation = 0
         rotation = 0
-        
+        sensorMinus170 = self.getDistanceAtSensor(0) 
         sensorMinus80 = self.getDistanceAtSensor(1)
         sensorMinus40 = self.getDistanceAtSensor(2)
         sensorMinus20 = self.getDistanceAtSensor(3)
         sensorPlus20 = self.getDistanceAtSensor(4)
         sensorPlus40 = self.getDistanceAtSensor(5)
         sensorPlus80 = self.getDistanceAtSensor(6)
-
-        if len(self.params) != 7: # vérifie que le nombre de paramètres donné est correct
+        sensorPlus170 = self.getDistanceAtSensor(7)
+        if len(self.params) != 18: # vérifie que le nombre de paramètres donné est correct
             print ("[ERROR] number of parameters is incorrect. Exiting.")
             exit()
 
         # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
-        rotation =  math.tanh( sensorMinus40 * self.params[0] + sensorMinus20 * self.params[1] + sensorPlus20 * self.params[2] + sensorPlus40 * self.params[3] + self.params[4]  * sensorMinus80+ self.params[5]  + self.params[6]  * sensorPlus80) 
-        #rotation =  math.tanh( sensorMinus40 * self.params[7] + sensorMinus20 * self.params[7] + sensorPlus20 * self.params[9] + sensorPlus40 * self.params[10] + self.params[11] +self.params[12]  * sensorMinus80 + self.params[13]  * sensorPlus80)
-
-        #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
+        translation =  math.tanh( sensorMinus170 * self.params[0] +sensorMinus80 * self.params[1] + sensorMinus40 * self.params[2] + sensorMinus20 * self.params[3] + sensorPlus20 * self.params[4] + sensorPlus40 * self.params[5]  + self.params[6]  * sensorPlus80 +  self.params[7]  * sensorPlus170 +self.params[8]) 
+        rotation =  math.tanh(    sensorMinus170 * self.params[9] +sensorMinus80 * self.params[10]+sensorMinus40 * self.params[11] + sensorMinus20 * self.params[12] + sensorPlus20 * self.params[13] + sensorPlus40 * self.params[14] +self.params[15]  * sensorPlus80 + self.params[16]  * sensorPlus170 + self.params[17] )        #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
 
         self.setRotationValue( rotation )
-        self.setTranslationValue( 1 )
+        self.setTranslationValue( translation )
 
         return
 
@@ -274,15 +277,14 @@ def setupAgents():
 
 
 def setupArena():
+    begin = 1
     for j in range(0,16):
         for i in range(0, 16):
-            if j%5 == 0 and i%3 == 0:
+            if j%(i%5+ 4 ) == 0 and i%(j%4+3) == 0:
                 addObstacle(row=i,col=j)
-    for j in range(0, 10):
-        addObstacle(row=5, col=j)
+
     
-    for j in range(10, 15):
-        addObstacle(row=j, col=12)
+    
     
 
 
@@ -291,11 +293,12 @@ def updateSensors():
     # throw_rays...(...) : appel couteux (une fois par itération du simulateur). permet de mettre à jour le masque de collision pour tous les robots.
     sensors = throw_rays_for_many_players(game,game.layers['joueur'],SensorBelt,max_radius = maxSensorDistance+game.player.diametre_robot() , show_rays=showSensors)
 
-def mute(individu,pMute):
+def mute(individu,pMute, sigma):
     nouvelIndividu = []
     for e in individu:
         if random() < pMute:
-            nouvelIndividu.append ( max(min(e  + uniform(-0.2, 0.2) , 1), -1 ))
+            #nouvelIndividu.append ( ((e+1) %2) * choice([-1, 1]) )
+            nouvelIndividu.append ( e + gauss(0,sigma) )
         else:
             nouvelIndividu.append( e )
     return nouvelIndividu
@@ -379,15 +382,15 @@ for iteration in range(nbruns):
     maxEvaluations = 500 # budget en terme de nombre de robots évalués au total
     maxIterations = 200 # temps passé pour évaluer _un_ robot
     nbReevaluations = 4
-    genomeSize = 7
+    genomeSize = 18
     K = 8
     Pmutation = float(1) / genomeSize
     population = []
     for i in range(taillePop):
         individu = []
         for j in range(genomeSize):
-            individu.append(uniform(-1, 1))
-        population.append([individu, 0])
+            individu.append(randint(-1, 1))
+        population.append([individu, 0, 0])
     
     
     it= 0
@@ -395,22 +398,25 @@ for iteration in range(nbruns):
     nbGen = 0
     
     data = []
-    
+    sigma = 1
     meilleureFitness = 0
     meilleurIndividu = []
+    meilleurnbCases = 0
     #for evaluationIt in range(maxEvaluations):
     while it + taillePop <= maxEvaluations:    
         
         for individu in population:
             print(individu[0])
-            individu[1] = agents[0].evaluate(individu[0])
-            
+            individu[1], individu[2]= agents[0].evaluate(individu[0])
        
         for individu in population:
             #print individu[0],"- fitness: ",individu[1]
-            if individu[1] > meilleureFitness:
+            if individu[2] > meilleurnbCases:
+                #sigma *= 2
+
                 meilleureFitness = individu[1]
                 meilleurIndividu = individu[:]
+                meilleurnbCases = individu[2]
                 
         data.append([it+taillePop,meilleureFitness])
         
@@ -427,15 +433,15 @@ for iteration in range(nbruns):
             parent = population[ sorted(tournoi, key=lambda x:population[x][1])[-1] ][0]
 
             # crée un nouvel individu par mutation de l'individu parent, et ajoute à la nouvelle population
-            nouvelIndividu = mute(parent,Pmutation)
-            nouvellePopulation.append([nouvelIndividu,0])
+            nouvelIndividu = mute(parent,Pmutation, sigma)
+            nouvellePopulation.append([nouvelIndividu,0, 0])
         
         
-        
+        print(nbGen)
         population = nouvellePopulation[:]
         it = it + taillePop
         nbGen += 1
-        fichier.write(str(nbGen)+","+str(meilleureFitness)+"\n")
+        fichier.write(str(nbGen)+","+str(meilleureFitness)+" , " + str(meilleurnbCases) +"\n")
         
         
         
@@ -474,7 +480,7 @@ for iteration in range(nbruns):
         # evalue les parametres
         fitness = agents[0].evaluate(meilleurIndividu[0])
 
-        print ("\t\tFitness:", fitness, "(original recorded fitness:", bestFitness,", measured at evaluation",bestEvalIt,")")
+        print ("\t\tFitness:", fitness, "(original recorded fitness:", bestFitness,", measured at evaluation",bestEvalIt, " bestCases" ,meilleurnbCases, ")")
         print ("\t\tGenome:", bestParams)
         
     fichier.close()
