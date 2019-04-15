@@ -103,7 +103,7 @@ import numpy as np
 game = Game()
 agents = []
 
-arena = 1
+arena = 0
 
 nbAgents = 8# doit être pair et inférieur a 32
 maxSensorDistance = 30              # utilisé localement.
@@ -182,89 +182,73 @@ class AgentTypeA(object):
 
         color( (0,255,0) )
         circle( *self.getRobot().get_centroid() , r = 22) # je dessine un rond bleu autour de ce robot
+        params = [0, -1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 0, -1, 1, 1, 1, 1, -1]
+        #print "robot #", self.id, " -- step"
 
-        if self.id  != 10:
-        
-        
-        
-        
-        
-            params = [0, -1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 0, -1, 1, 1, 1, 1, -1]
-            #print "robot #", self.id, " -- step"
+        p = self.robot
 
-            p = self.robot
-
-            # actions
-            # valeur de paramètre entre -1 et +1.
-            # cette valeur sera converti ensuite entre:
-            #  - pour setTranslation: entre -maxTranslationSpeed et +maxTranslationSpeed
-            #  - pour setRotation: entre -maxRotationSpeed et +maxRotationSpeed
-            # Attention:
-            #   ces fonctions *programment* la commande motrice, mais *ne l'exécute pas*
-            #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
+        # actions
+        # valeur de paramètre entre -1 et +1.
+        # cette valeur sera converti ensuite entre:
+        #  - pour setTranslation: entre -maxTranslationSpeed et +maxTranslationSpeed
+        #  - pour setRotation: entre -maxRotationSpeed et +maxRotationSpeed
+        # Attention:
+        #   ces fonctions *programment* la commande motrice, mais *ne l'exécute pas*
+        #   la dernière valeur allouée exécutée. Chaque fonction doit donc être appelé une seule fois.
+        translation = 0
+        rotation = 0
+        sensorMinus170 = self.getDistanceAtSensor(0)
+        sensorMinus80 = self.getDistanceAtSensor(1)
+        sensorMinus40 = self.getDistanceAtSensor(2)
+        sensorMinus20 = self.getDistanceAtSensor(3)
+        sensorPlus20 = self.getDistanceAtSensor(4)
+        sensorPlus40 = self.getDistanceAtSensor(5)
+        sensorPlus80 = self.getDistanceAtSensor(6)
+        sensorPlus170 = self.getDistanceAtSensor(7)
+        
+        if self.getObjectTypeAtSensor(0) == 2 and  self.getObjectTypeAtSensor(7) == 2 and self.getRobotInfoAtSensor(0)["teamname"] != "Equipe chekirou_kaci" and abs(self.getRobotInfoAtSensor(0)["orientation"]- self.robot.orientation()) == 0:
+            color( (0,0,255) )
+            circle( *self.getRobot().get_centroid() , r = 22)
+            
+            rotation =  0
             translation = 0
-            rotation = 0
-            sensorMinus170 = self.getDistanceAtSensor(0)
-            sensorMinus80 = self.getDistanceAtSensor(1)
-            sensorMinus40 = self.getDistanceAtSensor(2)
-            sensorMinus20 = self.getDistanceAtSensor(3)
-            sensorPlus20 = self.getDistanceAtSensor(4)
-            sensorPlus40 = self.getDistanceAtSensor(5)
-            sensorPlus80 = self.getDistanceAtSensor(6)
-            sensorPlus170 = self.getDistanceAtSensor(7)
-            
-            if self.getObjectTypeAtSensor(0) == 2 and  self.getObjectTypeAtSensor(7) == 2 and self.getRobotInfoAtSensor(0)["teamname"] != "Equipe chekirou_kaci" and abs(self.getRobotInfoAtSensor(0)["orientation"]- self.robot.orientation()) == 0:
-                color( (0,0,255) )
-                circle( *self.getRobot().get_centroid() , r = 22)
-                
-                rotation =  0
-                translation = 0
 
-            elif self.etat - ((self.robot.get_centroid()[0])*10+ (self.robot.get_centroid()[1])) == 0:
-                color( (255,0,0) )
-                circle( *self.getRobot().get_centroid() , r = 22)
-                rotation = randint(-1, 1) * randint(0, 1)
-                translation = randint(-1, 1)
-            elif(sum([self.getDistanceAtSensor(i) for i in range(8) ]) != 8):
-                color( (100,100,100) )
-                circle( *self.getRobot().get_centroid() , r = 22)
-            # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
-                translation =  math.tanh( sensorMinus170 * params[0] +sensorMinus80 * params[1] + sensorMinus40 * params[2] + sensorMinus20 * params[3] + sensorPlus20 * params[4] + sensorPlus40 * params[5]  + params[6]  * sensorPlus80 +  params[7]  * sensorPlus170 +params[8]) 
-                rotation =  math.tanh(  sensorMinus170 * params[9] +sensorMinus80 * params[10]+sensorMinus40 * params[11] + sensorMinus20 * params[12] + sensorPlus20 * params[13] + sensorPlus40 * params[14] +params[15]  * sensorPlus80 + params[16]  * sensorPlus170 + params[17] ) 
-            #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
-            
-
-            else:
-                #rotation = randint(-1, 1) 
-                translation =1
-                rotation =np.random.choice([-1.0, 0, 1.0], 1, p=[0.45,0.1,0.45 ]) * randint(0, 1)
-            
-            
-            
-            
-            
-            self.setRotationValue( rotation )
-            self.setTranslationValue( translation )
-            # normalisé -1,+1
-            
-            # monitoring (optionnel - changer la valeur de verbose)
-            if verbose == True:
-                print ("Robot #"+str(self.id)+" [teamname:\""+str(self.teamname)+"\"] [variable mémoire = "+str(self.etat)+"] :")
-                for i in range(len(SensorBelt)):
-                    print ("\tSenseur #"+str(i)+" (angle: "+ str(SensorBelt[i])+"°)")
-                    print ("\t\tDistance  :",self.getDistanceAtSensor(i))
-                    print ("\t\tType      :",self.getObjectTypeAtSensor(i)) # 0: rien, 1: mur ou bord, 2: robot
-                    print ("\t\tRobot info:",self.getRobotInfoAtSensor(i)) # dict("id","centroid(x,y)","orientation") (si pas de robot: renvoi "None" et affiche un avertissement dans la console
-            #self.etat = ((self.robot.get_centroid()[0])*10+ (self.robot.get_centroid()[1]))
-            self.etat= self.robot.get_centroid()[0] *10+ (self.robot.get_centroid()[1])
+        elif self.etat - ((self.robot.get_centroid()[0])*10+ (self.robot.get_centroid()[1])) == 0:
+            color( (255,0,0) )
+            circle( *self.getRobot().get_centroid() , r = 22)
+            rotation = randint(-1, 1) * randint(0, 1)
+            translation = randint(-1, 1)
+        elif(sum([self.getDistanceAtSensor(i) for i in range(8) ]) != 8):
+            color( (100,100,100) )
+            circle( *self.getRobot().get_centroid() , r = 22)
+        # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
+            translation =  math.tanh( sensorMinus170 * params[0] +sensorMinus80 * params[1] + sensorMinus40 * params[2] + sensorMinus20 * params[3] + sensorPlus20 * params[4] + sensorPlus40 * params[5]  + params[6]  * sensorPlus80 +  params[7]  * sensorPlus170 +params[8]) 
+            rotation =  math.tanh(  sensorMinus170 * params[9] +sensorMinus80 * params[10]+sensorMinus40 * params[11] + sensorMinus20 * params[12] + sensorPlus20 * params[13] + sensorPlus40 * params[14] +params[15]  * sensorPlus80 + params[16]  * sensorPlus170 + params[17] ) 
+        #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
         else:
-            if self.getObjectTypeAtSensor(0) == 2 and  self.getObjectTypeAtSensor(7) == 2 and self.getRobotInfoAtSensor(0)["teamname"] != "Equipe chekirou_kaci" and abs(self.getRobotInfoAtSensor(0)["orientation"]- self.robot.orientation()) == 0:
-                rotation =  0
-                translation = 0
-
-            elif self.etat - ((self.robot.get_centroid()[0])*10+ (self.robot.get_centroid()[1])) == 0:
-                rotation = randint(-1, 1) * randint(0, 1)
-                translation = randint(-1, 1)
+            #rotation = 1 if iteration % 100 < 40 else -1 if iteration % 100 > 60 else 0  
+            translation =1
+            #rotation =np.random.choice([-1.0, 0, 1.0], 1, p=[0.45,0.1,0.45 ]) * randint(0, 1)
+            rotation =math.tanh( np.random.normal(0, 1 , 1))
+        
+        
+        
+        
+        self.setRotationValue( rotation )
+        self.setTranslationValue( translation )
+        # normalisé -1,+1
+        
+        # monitoring (optionnel - changer la valeur de verbose)
+        if verbose == True:
+            print ("Robot #"+str(self.id)+" [teamname:\""+str(self.teamname)+"\"] [variable mémoire = "+str(self.etat)+"] :")
+            for i in range(len(SensorBelt)):
+                print ("\tSenseur #"+str(i)+" (angle: "+ str(SensorBelt[i])+"°)")
+                print ("\t\tDistance  :",self.getDistanceAtSensor(i))
+                print ("\t\tType      :",self.getObjectTypeAtSensor(i)) # 0: rien, 1: mur ou bord, 2: robot
+                print ("\t\tRobot info:",self.getRobotInfoAtSensor(i)) # dict("id","centroid(x,y)","orientation") (si pas de robot: renvoi "None" et affiche un avertissement dans la console
+        #self.etat = ((self.robot.get_centroid()[0])*10+ (self.robot.get_centroid()[1]))
+        self.etat= self.robot.get_centroid()[0] *10+ (self.robot.get_centroid()[1])
+    
 
         return
 
