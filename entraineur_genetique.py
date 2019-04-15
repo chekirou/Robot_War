@@ -134,7 +134,7 @@ class Agent(object):
             #self.updateFitness1() # pour maximiser la distance au centre de l'arène
             #self.updateFitness2() # pour maximiser la distance parcourue a chaque pas de temps
             
-            self.updateFitness4()
+            self.updateFitness5()
             # pour maximiser la distance parcourue a chaque pas de temps, en pénalisant les commandes de rotation
             game.mainiteration()
 
@@ -158,6 +158,7 @@ class Agent(object):
         self.fitness += math.sqrt(abs(currentPos[0]**2-(screen_width/2)**2)) + math.sqrt(abs(currentPos[1]**2-(screen_height/2)**2)) # somme de la distance au centre de l'arene a chaque pas de temps
     
     def updateFitness2(self):
+
         currentPos = self.robot.get_centroid()
         self.fitness += math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2)) + math.sqrt(abs(currentPos[1]**2-self.previousPos[1]**2)) # a chaque pas de temps, ajoute la distance parcourue depuis t-1
         self.previousPos = currentPos
@@ -165,12 +166,15 @@ class Agent(object):
     def updateFitness3(self):
         currentPos = self.robot.get_centroid()
         self.fitness += ( 1 - abs(self.rotationValue/maxRotationSpeed) ) * math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2)) + math.sqrt(abs(currentPos[1]**2-self.previousPos[1]**2)) # a chaque pas de temps, ajoute la distance parcourue depuis t-1, avec une pénalité si rotation
+    def updateFitness5(self):
+        currentPos = self.robot.get_centroid()
+        self.fitness += ( 1 - abs(self.rotationValue/maxRotationSpeed) ) * (math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2)) + math.sqrt(abs(currentPos[1]**2-self.previousPos[1]**2)))
         self.previousPos = currentPos
     
     
     def updateFitness4(self):
         currentPos = self.robot.get_centroid()
-        self.fitness +=  (self.translationValue) * ( 1 - abs(self.rotationValue/maxRotationSpeed) ) * (math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2)) + math.sqrt(abs(currentPos[1]**2-self.previousPos[1]**2))) # a chaque pas de temps, ajoute la distance parcourue depuis t-1, avec une pénalité si rotation
+        self.fitness +=  (self.translationValue) * ( 1 - abs(self.rotationValue/maxRotationSpeed) ) * (math.sqrt(abs(currentPos[0]**2-self.previousPos[0]**2) + abs(currentPos[1]**2-self.previousPos[1]**2))) # a chaque pas de temps, ajoute la distance parcourue depuis t-1, avec une pénalité si rotation
         self.previousPos = currentPos
     
     
@@ -294,7 +298,8 @@ def setupArena():
     addObstacle(row=6,col=12)
     addObstacle(row=11,col=3)
     addObstacle(row=10,col=3)
-    addObstacle(row=9,col=3)
+    for i in range(0,10):
+        addObstacle(row=i,col=i)
 
     
     
@@ -311,7 +316,7 @@ def mute(individu,pMute, sigma):
     for e in individu:
         if random() < pMute:
             #nouvelIndividu.append ( ((e+1) %2) * choice([-1, 1]) )
-            nouvelIndividu.append ( e + gauss(0,sigma) )
+            nouvelIndividu.append (  gauss(0,sigma) )
         else:
             nouvelIndividu.append( e )
     return nouvelIndividu

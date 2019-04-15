@@ -207,11 +207,11 @@ class AgentTypeA(object):
         sensorPlus80 = self.getDistanceAtSensor(6)
         sensorPlus170 = self.getDistanceAtSensor(7)
         if self.getObjectTypeAtSensor(0) == 2 and self.getRobotInfoAtSensor(0)["teamname"] != "Equipe chekirou_kaci":
-            translation = 1
-            rotation= math.tanh(-170)
+            translation = 0
+            rotation= 0
         elif self.getObjectTypeAtSensor(7) == 2 and self.getRobotInfoAtSensor(7)["teamname"] != "Equipe chekirou_kaci":
-            translation = 1
-            rotation = math.tanh(170)
+            translation = 0
+            rotation = 0
 
         elif(sum([self.getDistanceAtSensor(i) for i in range(8) ]) != 8):
         # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
@@ -220,7 +220,7 @@ class AgentTypeA(object):
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
         else:
             translation = 1
-            rotation =  np.random.choice([-1.0, 0, 1.0], 1, p=[0.4,0.2,0.4 ])
+            rotation =  np.random.choice([-1.0, 0, 1.0], 1, p=[0.4,0.2,0.4 ]) if iteration % 10 else 0
         self.setRotationValue( rotation )
         self.setTranslationValue( translation )
          # normalisé -1,+1

@@ -33,6 +33,7 @@ import sys
 import atexit
 from itertools import count
 import math
+import numpy as np
 
 
 '''''''''''''''''''''''''''''
@@ -102,7 +103,7 @@ class Agent(object):
 
     def stepController(self):
 		
-        params =[0.39331486782535263, -1.3085966947789585, 2.8490739281330963, -2.0951366836181267, 0.7580975901277354, 3.763474757722576, 0.23471912130976724, 0.5182432342503274, -0.4258181759321525, -1.196105274256312, 0, -1, 1.2701382575212221, 1.4896622246446334, 1, 1.0987127855543513, -2.6520473995722194, 0]
+        params =[0.15043943110607863, 1, -0.7660539362057822, 1.305767809507773, -0.4456038016956548, -0.5584707699156176, -0.7228646123130078, 1.8527193737526093, 0.6441114116132866, 0, 1.0926813072416, -0.7683342233868962, 0.16729964922672289, 0, 0.2953641351645224, 1, -0.14582268366450343, -1.7350477128499535]
         #print "robot #", self.id, " -- step"
 
         p = self.robot
@@ -128,7 +129,7 @@ class Agent(object):
 
         # Perceptron: a linear combination of sensory inputs with weights (=parameters). Use an additional parameters as a bias, and apply hyperbolic tangeant to ensure result is in [-1,+1]
         translation =  math.tanh( sensorMinus170 * params[0] +sensorMinus80 * params[1] + sensorMinus40 * params[2] + sensorMinus20 * params[3] + sensorPlus20 * params[4] + sensorPlus40 * params[5]  + params[6]  * sensorPlus80 +  params[7]  * sensorPlus170 +params[8]) 
-        rotation =  math.tanh(  sensorMinus170 * params[9] +sensorMinus80 * params[10]+sensorMinus40 * params[11] + sensorMinus20 * params[12] + sensorPlus20 * params[13] + sensorPlus40 * params[14] +params[15]  * sensorPlus80 + params[16]  * sensorPlus170 + params[17] ) 
+        rotation =  math.tanh(  sensorMinus170 * params[9] +sensorMinus80 * params[10]+sensorMinus40 * params[11] + sensorMinus20 * params[12] + sensorPlus20 * params[13] + sensorPlus40 * params[14] +params[15]  * sensorPlus80 + params[16]  * sensorPlus170 + params[17] ) #+ np.random.random_sample()/100
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
 
         self.setRotationValue( rotation )
@@ -234,16 +235,16 @@ def setupAgents():
 
 
 def setupArena():
-    addObstacle(row=4,col=3)
+    for i in range(6,13):
+        addObstacle(row=3,col=i)
+    for i in range(3,10):
+        addObstacle(row=12,col=i)
+    addObstacle(row=4,col=12)
     addObstacle(row=5,col=12)
-    addObstacle(row=8,col=12)
+    addObstacle(row=6,col=12)
     addObstacle(row=11,col=3)
     addObstacle(row=10,col=3)
     addObstacle(row=9,col=3)
-    addObstacle(row=12,col=5)
-    addObstacle(row=10,col=8)
-    addObstacle(row=6,col=9)
-    addObstacle(row=1,col=2) 
 
 def updateSensors():
     global sensors
