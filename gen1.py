@@ -58,7 +58,7 @@ game = Game()
 agents = []
 screen_width=512 #512,768,... -- multiples de 32  
 screen_height=512 #512,768,... -- multiples de 32
-nbAgents = 4
+nbAgents = 1
 
 maxSensorDistance = 30              # utilisé localement.
 maxRotationSpeed = 5
@@ -103,7 +103,7 @@ class Agent(object):
 
     def stepController(self):
 		
-        params =[0.15043943110607863, 1, -0.7660539362057822, 1.305767809507773, -0.4456038016956548, -0.5584707699156176, -0.7228646123130078, 1.8527193737526093, 0.6441114116132866, 0, 1.0926813072416, -0.7683342233868962, 0.16729964922672289, 0, 0.2953641351645224, 1, -0.14582268366450343, -1.7350477128499535]
+        params =[0, 0, 1, -1, 0, 1, 1, 1, -1, -1, 0, 0, 0, 0, 1, -1, 0, 1]
         #print "robot #", self.id, " -- step"
 
         p = self.robot
@@ -131,9 +131,9 @@ class Agent(object):
         translation =  math.tanh( sensorMinus170 * params[0] +sensorMinus80 * params[1] + sensorMinus40 * params[2] + sensorMinus20 * params[3] + sensorPlus20 * params[4] + sensorPlus40 * params[5]  + params[6]  * sensorPlus80 +  params[7]  * sensorPlus170 +params[8]) 
         rotation =  math.tanh(  sensorMinus170 * params[9] +sensorMinus80 * params[10]+sensorMinus40 * params[11] + sensorMinus20 * params[12] + sensorPlus20 * params[13] + sensorPlus40 * params[14] +params[15]  * sensorPlus80 + params[16]  * sensorPlus170 + params[17] ) #+ np.random.random_sample()/100
         #print ("robot #", self.id, "[r =",rotation," - t =",translation,"]")
-
-        self.setRotationValue( rotation )
-        self.setTranslationValue( translation )
+        rotation = 1  if iteration % 500  == 0 else 0
+        self.setRotationValue( rotation)
+        self.setTranslationValue( 1 )
         # monitoring - affiche diverses informations sur l'agent et ce qu'il voit.
         # pour ne pas surcharger l'affichage, je ne fais ca que pour le player 1
         if verbose == True and self.id == 0:
@@ -235,7 +235,7 @@ def setupAgents():
 
 
 def setupArena():
-    for i in range(6,13):
+    '''for i in range(6,13):
         addObstacle(row=3,col=i)
     for i in range(3,10):
         addObstacle(row=12,col=i)
@@ -243,8 +243,9 @@ def setupArena():
     addObstacle(row=5,col=12)
     addObstacle(row=6,col=12)
     addObstacle(row=11,col=3)
-    addObstacle(row=10,col=3)
+    addObstacle(row=10,col=3)'''
     addObstacle(row=9,col=3)
+
 
 def updateSensors():
     global sensors
