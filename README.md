@@ -1,7 +1,6 @@
 # projet3i025 2 
-projet de 3i025
+projet de 3i025 intelligence artificielle et recherche operationnelle.
 
-	
 # Strategie : 
 - si personne => j'avance en zig zag
 - si mur  => j'evite
