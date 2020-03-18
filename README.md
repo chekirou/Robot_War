@@ -1,6 +1,6 @@
 # Sorbonne University
-# 3i025 project 
-artficial intelligence and operational research project on behavioral multi-agent robots.
+# Robot war 
+Artficial intelligence and operational research project on behavioral multi-agent robots.
  - this project takes the form of a tournament, each team has 5 robots who can follow any behavior wanted.
  - each robot has eight sensors and detects the distance to the object and its type (wall, own robot or enemy robot)
  - the goal of the game is to own the biggest part of the arena.
